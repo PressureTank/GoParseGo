@@ -10,16 +10,31 @@ import (
 	"os"
 )
 
+type DiscFunction struct {
+	Fields         string
+	Name           string
+	MethodReceiver string
+	ReturnParams   string
+}
+
 func main() {
-	// read file
-	// here you can filepath.Walk() for your go files
-	fname := os.Args[1]
+	good := Functions("../../fuzz_seek.go")
+	if good != nil {
+		log.Println(good)
+		return
+	}
+}
+
+// function Functions takes a path/filename returns an error
+// This function is used to find all functions that exist within a .go src file.
+// All functions found will be returned as a struct type
+func Functions(fname string) error {
 
 	// read file
 	file, err := os.Open(fname)
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 	defer file.Close()
 
@@ -27,7 +42,7 @@ func main() {
 	srcbuf, err := ioutil.ReadAll(file)
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 	src := string(srcbuf)
 
@@ -36,7 +51,7 @@ func main() {
 	f, err := parser.ParseFile(fset, "lib.go", src, 0)
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 
 	// main inspection
@@ -72,6 +87,7 @@ func main() {
 		}
 		return true
 	})
+	return nil
 }
 
 func expr(e ast.Expr) (ret string) {
